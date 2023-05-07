@@ -1,0 +1,36 @@
+<form class="mt-5" id="form" method="post" action="" (ngSubmit)="onSubmit(form)" #form="ngForm">
+    <div class="container-fluid">
+        <div class="row justify-content-around">
+            <div class="col-xl-4 col-sm-3 mb-3 mt-5">
+                <h2 class="text-primary">INICIAR SESIÓN</h2>
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-4 col-sm-3 mb-3">
+                <label class="form-label" name="email" id="email" for="email">Correo electrónico</label>
+                <input type="email" class="form-control border-primary" name="email" placeholder="name@example.com" required [(ngModel)]="loginData.email">
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-4 col-sm-3 mb-3">
+                <label class="form-label" name="password" id="password" for="password" required>Password</label>
+                <input type="password" class="form-control border-primary" name="password" required [(ngModel)]="loginData.password">
+            </div>
+            <span *ngIf="loginError">Span de error de login</span>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-4 col-sm-3 mb-3">
+                <button class="btn btn-primary" type="submit">Enviar</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-4 col-sm-3 mb-5 mt-3">
+            <p>¿Todavía no es usuario?</p>
+            <a [routerLink]="['nuevo-usuario']">Registrarse</a>
+        </div>
+    </div>
+</div>

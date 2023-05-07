@@ -1,0 +1,35 @@
+<nav class="navbar navbar-expand-md navbar-dark bg-primary bg-opacity-60 fixed-top mb-5">
+    <div class="container-fluid">
+      <img src="../../../assets/images/logoKinesia.jpg" alt="">
+      <a class="navbar-brand ps-3" rourterLink="">Clínica kinesia</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end pe-5" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" [routerLink]="['home']">Inicio</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Nuestros servicios</a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" [routerLink]="['fisio']">Fisioterapia</a></li>
+                <li><a class="dropdown-item" [routerLink]="['sueloPelvico']">Fisioterapia suelo pélvico</a></li>
+                <li><a class="dropdown-item" [routerLink]="['podologia']">Podología</a></li>
+                <li><a class="dropdown-item" [routerLink]="['enfermeria']">Enfermería</a></li>
+              </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [routerLink]="['equipo']">Equipo</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [routerLink]="['contacto']">Contacto</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [routerLink]="['logueo']">Reserva Cita</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  

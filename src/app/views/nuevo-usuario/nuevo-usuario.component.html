@@ -1,0 +1,54 @@
+<form class="mt-5" id="form" method="post" action="" (ngSubmit)="onSubmit(form)" #form="ngForm">
+    <div class="container-fluid">
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3 mt-3">
+                <h2 class="mt-3 text-primary">NUEVO USUARIO</h2>
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <label class="form-label" name="nombre" id="nombre" for="nombre">Nombre</label>
+                <input type="text" class="form-control border-primary" name="nombre" placeholder="Nombre" required [(ngModel)]="paciente.nombre">
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <label class="form-label" name="apellidos" id="apellidos" for="apellidos">Apellidos</label>
+                <input type="text" class="form-control border-primary" name="apellidos" [(ngModel)]="paciente.apellidos" placeholder="Apellidos" required>
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <label class="form-label" name="fechaNacimiento" id="fechaNacimiento" for="fechaNacimiento">Fecha de nacimiento</label>
+                <input type="date" class="form-control border-primary" name="fechaNacimiento" [(ngModel)]="paciente.fecha_nacimiento">
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <label class="form-label" name="telefono" id="telefono" for="telefono">Teléfono</label>
+                <input type="tel" class="form-control border-primary" name="telefono" [(ngModel)]="paciente.telefono" required>
+            </div>
+        </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <label class="form-label" name="email" id="email" for="email">Correo electrónico</label>
+                <input type="email" class="form-control is-invalid border-primary" name="email" [(ngModel)]="paciente.email" placeholder="name@example.com" required>
+            </div>
+        </div>
+          <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <label class="form-label" name="password" id="password" for="password">Contraseña</label>
+                <input type="password" class="form-control border-primary" name="password" [(ngModel)]="paciente.password">
+                <p>La contraseña debe tener mínimo 8 caracteres y contener números, letras, mayúsculas, minúsculas y algún caracter especial</p>
+            </div>
+          </div>
+        <div class="row justify-content-around">
+            <div class="col-xl-6 col-sm-3 mb-3">
+                <button class="btn btn-primary" type="submit">Enviar</button>
+            </div>
+        </div>
+    </div>
+  </form>
+
+            
+           
