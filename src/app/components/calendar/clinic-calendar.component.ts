@@ -40,20 +40,9 @@ import {
   };
   
   @Component({
-    selector: 'mwl-demo-component',
+    selector: 'calendar-component',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    styles: [
-      `
-        h3 {
-          margin: 0 0 10px;
-        }
-  
-        pre {
-          background-color: #f5f5f5;
-          padding: 15px;
-        }
-      `,
-    ],
+    styleUrls: ['angular-calendar.css'],
     templateUrl: 'clinic-calendar.component.html',
   })
   export class ClinicCalendarComponent {

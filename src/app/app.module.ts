@@ -17,32 +17,34 @@ import { NuevoUsuarioComponent } from './views/nuevo-usuario/nuevo-usuario.compo
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { LogueoComponent } from './views/logueo/logueo.component';
 import { ReservasComponent } from './views/reservas/reservas.component';
+import { ClinicCalendarModule } from "./components/calendar/clinic-calendar.module";
 
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    HeaderComponent,
-    FooterComponent,
-    HomeComponent,
-    FisioComponent,
-    SueloPelvicoComponent,
-    PodologiaComponent,
-    EnfermeriaComponent,
-    EquipoComponent,
-    ContactoComponent,
-    NuevoUsuarioComponent,
-    LogueoComponent,
-    ReservasComponent    
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    ReactiveFormsModule,
-    FormsModule,
-    HttpClientModule,
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        HeaderComponent,
+        FooterComponent,
+        HomeComponent,
+        FisioComponent,
+        SueloPelvicoComponent,
+        PodologiaComponent,
+        EnfermeriaComponent,
+        EquipoComponent,
+        ContactoComponent,
+        NuevoUsuarioComponent,
+        LogueoComponent,
+        ReservasComponent
+    ],
+    providers: [],
+    bootstrap: [AppComponent],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        ReactiveFormsModule,
+        FormsModule,
+        HttpClientModule,
+        ClinicCalendarModule
+    ]
 })
 export class AppModule { }

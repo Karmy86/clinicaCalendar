@@ -1,0 +1,32 @@
+<form class="mt-5 ms-5" id="form" method="post" action="" (ngSubmit)="reservarHora()" #form="ngForm">
+	<div class="container-fluid">
+		<div class="row justify-content-center mt-3">
+			<div class="col-xl-6 col-sm-6 mb-3 mt-5">
+				<h2 class="text-primary mt-3">RESERVAR CITA</h2>
+			</div>
+		</div>
+
+		<div class="row justify-content-center mt-3">
+			<div class="col-xl-6 col-sm-6 mb-3 mt-5">
+				<label class="mb-2" for="dia">Seleccione una fecha</label><br>
+				<select class="form-select" name="selectedDay" [(ngModel)]="selectedDay" (change)="onDayChange()">
+					<option *ngFor="let dia of availableDays" [ngValue]="dia">{{ dia }}</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="row justify-content-center mt-3">
+			<div class="col-xl-6 col-sm-6 mb-3 mt-5">
+				<label class="mb-2" for="hora">Elija una hora disponible</label><br>
+				<select class="form-select">
+					<option *ngFor="let hora of availableHours" [value]="hora.hora">{{ hora.hora }}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row justify-content-center ms-5">
+			<div class="col-xl-6 col-sm-3 mb-3 ms-5">
+				<button class="btn btn-primary ms-5" type="submit">Reservar</button>
+			</div>
+		</div>
+	</div>
+</form>
