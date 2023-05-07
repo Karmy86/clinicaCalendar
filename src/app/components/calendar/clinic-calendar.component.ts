@@ -1,8 +1,9 @@
+import { HttpClient } from '@angular/common/http';
 import {
     Component,
     ChangeDetectionStrategy,
     ViewChild,
-    TemplateRef,
+    TemplateRef, 
   } from '@angular/core';
   import {
     startOfDay,
@@ -40,7 +41,7 @@ import {
   };
   
   @Component({
-    selector: 'calendar-component',
+    selector: 'clinic-calendar',
     changeDetection: ChangeDetectionStrategy.OnPush,
     styleUrls: ['angular-calendar.css'],
     templateUrl: 'clinic-calendar.component.html',
@@ -48,7 +49,7 @@ import {
   export class ClinicCalendarComponent {
     @ViewChild('modalContent', { static: true }) modalContent: TemplateRef<any> | undefined;
   
-    view: CalendarView = CalendarView.Month;
+    view: CalendarView = CalendarView.Week;
   
     CalendarView = CalendarView;
   
@@ -122,7 +123,7 @@ import {
   
     activeDayIsOpen: boolean = true;
   
-    constructor(private modal: NgbModal) {}
+    constructor(private modal: NgbModal, private http: HttpClient) {}
   
     dayClicked({ date, events }: { date: Date; events: CalendarEvent[] }): void {
       if (isSameMonth(date, this.viewDate)) {
@@ -168,6 +169,24 @@ import {
           title: 'New event',
           start: startOfDay(new Date()),
           end: endOfDay(new Date()),
+          color: colors['red'],
+          draggable: true,
+          resizable: {
+            beforeStart: true,
+            afterEnd: true,
+          },
+        },
+      ];
+    }
+
+    addEventFromReservaDate(date: Date): void {
+      console.log('Entra a añadir evento');
+      this.events = [
+        ...this.events,
+        {
+          title: 'New event',
+          start: date,
+          end: new Date(date.getHours() + 1),
           color: colors['red'],
           draggable: true,
           resizable: {
