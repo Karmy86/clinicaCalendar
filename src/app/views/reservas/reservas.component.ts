@@ -1,11 +1,12 @@
-import { ReservasService } from './../../service/reservas.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Dia } from 'src/app/interfaces/dia';
-import { DiaService } from 'src/app/service/dia.service';
-import { HoraModel } from 'src/app/interfaces/hora.model';
-import { HoraService } from 'src/app/service/hora.service';
 import {
-  startOfWeek,
+  Component,
+  ChangeDetectionStrategy,
+  ViewChild,
+  TemplateRef,
+  OnInit, 
+} from '@angular/core';
+import {
+  startOfDay,
   endOfDay,
   subDays,
   addDays,
@@ -13,28 +14,120 @@ import {
   isSameDay,
   isSameMonth,
   addHours,
+  startOfWeek,
   endOfWeek,
 } from 'date-fns';
-import { ClinicCalendarComponent } from 'src/app/components/calendar/clinic-calendar.component';
+import { Subject } from 'rxjs';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import {
+  CalendarEvent,
+  CalendarEventAction,
+  CalendarEventTimesChangedEvent,
+  CalendarView,
+} from 'angular-calendar';
+import { EventColor } from 'calendar-utils';
+import { ReservasService } from 'src/app/service/reservas.service';
+
+const colors: Record<string, EventColor> = {
+  red: {
+    primary: '#ad2121',
+    secondary: '#FAE3E3',
+  },
+  blue: {
+    primary: '#1e90ff',
+    secondary: '#D1E8FF',
+  },
+  yellow: {
+    primary: '#e3bc08',
+    secondary: '#FDF1BA',
+  },
+};
 
 @Component({
-  selector: 'app-reservas',
-  templateUrl: './reservas.component.html',
-  styleUrls: ['./reservas.component.css']
+  selector: 'reservas',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: 'reservas.component.html',
 })
 export class ReservasComponent implements OnInit {
+  @ViewChild('modalContent', { static: true }) modalContent: TemplateRef<any> | undefined;
 
-  @ViewChild('calendario') calendario: ClinicCalendarComponent | undefined;
-  
-  public availableDays: Dia[] = []; // Lista de días disponibles
-  public availableHours: HoraModel[] = []; // Lista de horas disponibles para el día seleccionado
-  public selectedDay: Dia | null = null; // Día seleccionado por el paciente
-  public fechaSemana: Date | null = null;
+  view: CalendarView = CalendarView.Week;
 
-  constructor(private diaService: DiaService, private horaService: HoraService, private reservasService: ReservasService) {}
+  CalendarView = CalendarView;
+
+  viewDate: Date = new Date();
+
+  modalData: {
+      action: string;
+      event: CalendarEvent;
+  } | undefined;
+
+  actions: CalendarEventAction[] = [
+    {
+      label: '<i class="fas fa-fw fa-pencil-alt"></i>',
+      a11yLabel: 'Edit',
+      onClick: ({ event }: { event: CalendarEvent }): void => {
+        this.handleEvent('Edited', event);
+      },
+    },
+    {
+      label: '<i class="fas fa-fw fa-trash-alt"></i>',
+      a11yLabel: 'Delete',
+      onClick: ({ event }: { event: CalendarEvent }): void => {
+        this.events = this.events.filter((iEvent) => iEvent !== event);
+        this.handleEvent('Deleted', event);
+      },
+    },
+  ];
+
+  refresh = new Subject<void>();
+
+  events: CalendarEvent[] = [
+    {
+      start: subDays(startOfDay(new Date()), 1),
+      end: addDays(new Date(), 1),
+      title: 'A 3 day event',
+      color: { ...colors['red'] },
+      actions: this.actions,
+      allDay: true,
+      resizable: {
+        beforeStart: true,
+        afterEnd: true,
+      },
+      draggable: true,
+    },
+    {
+      start: startOfDay(new Date()),
+      title: 'An event with no end date',
+      color: { ...colors['yellow'] },
+      actions: this.actions,
+    },
+    {
+      start: subDays(endOfMonth(new Date()), 3),
+      end: addDays(endOfMonth(new Date()), 3),
+      title: 'A long event that spans 2 months',
+      color: { ...colors['blue'] },
+      allDay: true,
+    },
+    {
+      start: addHours(startOfDay(new Date()), 2),
+      end: addHours(new Date(), 2),
+      title: 'A draggable and resizable event',
+      color: { ...colors['yellow'] },
+      actions: this.actions,
+      resizable: {
+        beforeStart: true,
+        afterEnd: true,
+      },
+      draggable: true,
+    },
+  ];
+
+  activeDayIsOpen: boolean = true;
+
+  constructor(private modal: NgbModal, private reservasService: ReservasService) {}
 
   ngOnInit(): void {
-    // this.loadAvailableDays();
     this.loadAllReservedDays();
   }
 
@@ -43,38 +136,93 @@ export class ReservasComponent implements OnInit {
     console.log(from);
     this.reservasService.findAllByWeek(startOfWeek(new Date()), endOfWeek(new Date())).subscribe({
       next: (value) => {
-        value.forEach((reserva) => this.calendario?.addEventFromReservaDate(reserva.dia_hora));
+        value.forEach((reserva) => this.addEventFromReservaDate(reserva.dia_hora));
       },
       error: (error) => console.error('Error al obtener los días disponibles: ', error)
     });
   }
 
-  loadAvailableDays() {
-    this.diaService.list().subscribe({
-      next: (value) => {
-        console.log('Completado' + value);
-        this.availableDays = value;
-      },
-      error: (error) => console.error('Error al obtener los días disponibles: ', error)
-    });
-  }
-
-  onDayChange() {
-    if (this.selectedDay) {
-      const formattedDay = this.selectedDay.dia;
-
-      this.horaService.list(this.selectedDay).subscribe({
-        next: (value) => {
-          this.availableHours = value;
-        },
-        error: (error) => console.error('Error al obtener las horas disponibles:', error)
-      });
+  dayClicked({ date, events }: { date: Date; events: CalendarEvent[] }): void {
+    if (isSameMonth(date, this.viewDate)) {
+      if (
+        (isSameDay(this.viewDate, date) && this.activeDayIsOpen === true) ||
+        events.length === 0
+      ) {
+        this.activeDayIsOpen = false;
+      } else {
+        this.activeDayIsOpen = true;
+      }
+      this.viewDate = date;
     }
   }
 
-  reservarHora() {
-
+  eventTimesChanged({
+    event,
+    newStart,
+    newEnd,
+  }: CalendarEventTimesChangedEvent): void {
+    this.events = this.events.map((iEvent) => {
+      if (iEvent === event) {
+        return {
+          ...event,
+          start: newStart,
+          end: newEnd,
+        };
+      }
+      return iEvent;
+    });
+    this.handleEvent('Dropped or resized', event);
   }
-  
-}
 
+  handleEvent(action: string, event: CalendarEvent): void {
+    this.modalData = { event, action };
+    this.modal.open(this.modalContent, { size: 'lg' });
+  }
+
+  addEvent(): void {
+    this.events = [
+      ...this.events,
+      {
+        title: 'New event',
+        start: startOfDay(new Date()),
+        end: endOfDay(new Date()),
+        color: colors['red'],
+        draggable: true,
+        resizable: {
+          beforeStart: true,
+          afterEnd: true,
+        },
+      },
+    ];
+  }
+
+  addEventFromReservaDate(date: Date): void {
+    console.log('Entra a añadir evento');
+    this.events = [
+      ...this.events,
+      {
+        title: 'New event',
+        start: date,
+        end: new Date(date.getHours() + 1),
+        color: colors['red'],
+        draggable: true,
+        resizable: {
+          beforeStart: true,
+          afterEnd: true,
+        },
+      },
+    ];
+  }
+
+  deleteEvent(eventToDelete: CalendarEvent) {
+    this.events = this.events.filter((event) => event !== eventToDelete);
+  }
+
+  setView(view: CalendarView) {
+    this.view = view;
+  }
+
+  closeOpenMonthViewDay() {
+    this.activeDayIsOpen = false;
+  }
+}
