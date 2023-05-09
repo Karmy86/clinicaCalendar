@@ -82,46 +82,7 @@ export class ReservasComponent implements OnInit {
 
   refresh = new Subject<void>();
 
-  events: CalendarEvent[] = [
-    {
-      start: subDays(startOfDay(new Date()), 1),
-      end: addDays(new Date(), 1),
-      title: 'A 3 day event',
-      color: { ...colors['red'] },
-      actions: this.actions,
-      allDay: true,
-      resizable: {
-        beforeStart: true,
-        afterEnd: true,
-      },
-      draggable: true,
-    },
-    {
-      start: startOfDay(new Date()),
-      title: 'An event with no end date',
-      color: { ...colors['yellow'] },
-      actions: this.actions,
-    },
-    {
-      start: subDays(endOfMonth(new Date()), 3),
-      end: addDays(endOfMonth(new Date()), 3),
-      title: 'A long event that spans 2 months',
-      color: { ...colors['blue'] },
-      allDay: true,
-    },
-    {
-      start: addHours(startOfDay(new Date()), 2),
-      end: addHours(new Date(), 2),
-      title: 'A draggable and resizable event',
-      color: { ...colors['yellow'] },
-      actions: this.actions,
-      resizable: {
-        beforeStart: true,
-        afterEnd: true,
-      },
-      draggable: true,
-    },
-  ];
+  events: CalendarEvent[] = new Array;
 
   activeDayIsOpen: boolean = true;
 
@@ -133,10 +94,10 @@ export class ReservasComponent implements OnInit {
 
   loadAllReservedDays() {
     const from = startOfWeek(new Date());
-    console.log(from);
     this.reservasService.findAllByWeek(startOfWeek(new Date()), endOfWeek(new Date())).subscribe({
       next: (value) => {
-        value.forEach((reserva) => this.addEventFromReservaDate(reserva.dia_hora));
+        value.forEach((reserva) => this.addEventFromReservaDate(new Date(reserva.dia_hora)));
+        this.refresh.next();
       },
       error: (error) => console.error('Error al obtener los días disponibles: ', error)
     });
