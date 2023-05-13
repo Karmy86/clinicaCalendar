@@ -11,8 +11,6 @@ export class ReservasService {
 
   rutaApi = 'http://localhost:8000/reservas';
 
-  rutaMock = 'https://run.mocky.io/v3/1a472c68-c683-4bc2-98d9-d408ac291dff';
-
   constructor(private httpClient : HttpClient) { }
 
   public findAllByWeek(from: Date, to: Date): Observable<Reservas[]> {
@@ -20,8 +18,7 @@ export class ReservasService {
     params = params.append('from', format(from, 'yyyy-MM-dd HH:mm:ss'));
     params = params.append('to', format(to, 'yyyy-MM-dd HH:mm:ss'));
     const options = {params: params};
-    // return this.httpClient.get<Reservas[]>(this.rutaApi + '/listar', options);
-    return this.httpClient.get<Reservas[]>(this.rutaMock + '/listar', options);
+    return this.httpClient.get<Reservas[]>(this.rutaApi + '/listar', options);
   }
 
 }

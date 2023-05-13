@@ -3,29 +3,26 @@ import {
   ChangeDetectionStrategy,
   ViewChild,
   TemplateRef,
-  OnInit, 
+  OnInit,
+  ChangeDetectorRef, 
 } from '@angular/core';
 import {
   startOfDay,
   endOfDay,
-  subDays,
-  addDays,
-  endOfMonth,
   isSameDay,
   isSameMonth,
-  addHours,
   startOfWeek,
   endOfWeek,
+  addMinutes,
+  addDays,
 } from 'date-fns';
-import { Subject } from 'rxjs';
+import { Subject, finalize, fromEvent, takeUntil} from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
   CalendarEvent,
-  CalendarEventAction,
-  CalendarEventTimesChangedEvent,
   CalendarView,
 } from 'angular-calendar';
-import { EventColor } from 'calendar-utils';
+import { EventColor, WeekViewHourSegment } from 'calendar-utils';
 import { ReservasService } from 'src/app/service/reservas.service';
 
 const colors: Record<string, EventColor> = {
@@ -58,35 +55,20 @@ export class ReservasComponent implements OnInit {
   viewDate: Date = new Date();
 
   modalData: {
-      action: string;
       event: CalendarEvent;
   } | undefined;
 
-  actions: CalendarEventAction[] = [
-    {
-      label: '<i class="fas fa-fw fa-pencil-alt"></i>',
-      a11yLabel: 'Edit',
-      onClick: ({ event }: { event: CalendarEvent }): void => {
-        this.handleEvent('Edited', event);
-      },
-    },
-    {
-      label: '<i class="fas fa-fw fa-trash-alt"></i>',
-      a11yLabel: 'Delete',
-      onClick: ({ event }: { event: CalendarEvent }): void => {
-        this.events = this.events.filter((iEvent) => iEvent !== event);
-        this.handleEvent('Deleted', event);
-      },
-    },
-  ];
-
-  refresh = new Subject<void>();
+  dragToCreateActive = false;
 
   events: CalendarEvent[] = new Array;
 
   activeDayIsOpen: boolean = true;
 
-  constructor(private modal: NgbModal, private reservasService: ReservasService) {}
+  weekStartsOn: 0 = 0;
+
+  refresh = new Subject<void>();
+
+  constructor(private modal: NgbModal, private reservasService: ReservasService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadAllReservedDays();
@@ -103,6 +85,55 @@ export class ReservasComponent implements OnInit {
     });
   }
 
+  startDragToCreateReservaEvent(segment: WeekViewHourSegment,
+    mouseDownEvent: MouseEvent, segmentElement: HTMLElement) {
+    const dragToSelectEvent: CalendarEvent = {
+      id: this.events.length,
+      title: 'New event',
+      start: segment.date,
+      meta: {
+        tmpEvent: true,
+      },
+    };
+    this.events = [...this.events, dragToSelectEvent];
+    const segmentPosition = segmentElement.getBoundingClientRect();
+    this.dragToCreateActive = true;
+    const endOfView = endOfWeek(this.viewDate, {
+      weekStartsOn: this.weekStartsOn,
+    });
+
+    fromEvent<MouseEvent>(document, 'mousemove')
+      .pipe(
+        finalize(() => {
+          delete dragToSelectEvent.meta.tmpEvent;
+          this.dragToCreateActive = false;
+          // this.refresh();
+          this.refresh.next();
+        }),
+        takeUntil(fromEvent(document, 'mouseup'))
+      )
+      .subscribe((mouseMoveEvent: MouseEvent) => {
+        const minutesDiff = this.ceilToNearest(
+          mouseMoveEvent.clientY - segmentPosition.top,
+          30
+        );
+
+        const daysDiff =
+          this.floorToNearest(
+            mouseMoveEvent.clientX - segmentPosition.left,
+            segmentPosition.width
+          ) / segmentPosition.width;
+
+        const newEnd = addDays(addMinutes(segment.date, minutesDiff), daysDiff);
+        if (newEnd > segment.date && newEnd < endOfView) {
+          dragToSelectEvent.end = newEnd;
+        }
+        this.handleEvent(dragToSelectEvent);
+        // this.refresh();
+        this.refresh.next();
+      });
+  }
+
   dayClicked({ date, events }: { date: Date; events: CalendarEvent[] }): void {
     if (isSameMonth(date, this.viewDate)) {
       if (
@@ -117,26 +148,8 @@ export class ReservasComponent implements OnInit {
     }
   }
 
-  eventTimesChanged({
-    event,
-    newStart,
-    newEnd,
-  }: CalendarEventTimesChangedEvent): void {
-    this.events = this.events.map((iEvent) => {
-      if (iEvent === event) {
-        return {
-          ...event,
-          start: newStart,
-          end: newEnd,
-        };
-      }
-      return iEvent;
-    });
-    this.handleEvent('Dropped or resized', event);
-  }
-
-  handleEvent(action: string, event: CalendarEvent): void {
-    this.modalData = { event, action };
+  handleEvent(event: CalendarEvent): void {
+    this.modalData = { event };
     this.modal.open(this.modalContent, { size: 'lg' });
   }
 
@@ -185,5 +198,18 @@ export class ReservasComponent implements OnInit {
 
   closeOpenMonthViewDay() {
     this.activeDayIsOpen = false;
+  }
+
+  // private refresh() {
+  //   this.events = [...this.events];
+  //   this.cdr.detectChanges();
+  // }
+
+  private floorToNearest(amount: number, precision: number) {
+    return Math.floor(amount / precision) * precision;
+  }
+  
+  private ceilToNearest(amount: number, precision: number) {
+    return Math.ceil(amount / precision) * precision;
   }
 }
