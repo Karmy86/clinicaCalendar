@@ -54,9 +54,7 @@ export class ReservasComponent implements OnInit {
 
   viewDate: Date = new Date();
 
-  modalData: {
-      event: CalendarEvent;
-  } | undefined;
+  modalData: any;
 
   dragToCreateActive = false;
 
@@ -67,6 +65,8 @@ export class ReservasComponent implements OnInit {
   weekStartsOn: 0 = 0;
 
   refresh = new Subject<void>();
+
+  locale = "en";
 
   constructor(private modal: NgbModal, private reservasService: ReservasService, private cdr: ChangeDetectorRef) {}
 
@@ -90,6 +90,7 @@ export class ReservasComponent implements OnInit {
     const dragToSelectEvent: CalendarEvent = {
       id: this.events.length,
       title: 'New event',
+      // start: this.parseToLocalDate(segment.date),
       start: segment.date,
       meta: {
         tmpEvent: true,
@@ -108,6 +109,7 @@ export class ReservasComponent implements OnInit {
           delete dragToSelectEvent.meta.tmpEvent;
           this.dragToCreateActive = false;
           // this.refresh();
+          this.openModalForEvent(dragToSelectEvent);
           this.refresh.next();
         }),
         takeUntil(fromEvent(document, 'mouseup'))
@@ -126,58 +128,32 @@ export class ReservasComponent implements OnInit {
 
         const newEnd = addDays(addMinutes(segment.date, minutesDiff), daysDiff);
         if (newEnd > segment.date && newEnd < endOfView) {
+          // dragToSelectEvent.end = this.parseToLocalDate(newEnd);
           dragToSelectEvent.end = newEnd;
         }
-        this.handleEvent(dragToSelectEvent);
         // this.refresh();
         this.refresh.next();
       });
   }
 
-  dayClicked({ date, events }: { date: Date; events: CalendarEvent[] }): void {
-    if (isSameMonth(date, this.viewDate)) {
-      if (
-        (isSameDay(this.viewDate, date) && this.activeDayIsOpen === true) ||
-        events.length === 0
-      ) {
-        this.activeDayIsOpen = false;
-      } else {
-        this.activeDayIsOpen = true;
-      }
-      this.viewDate = date;
-    }
-  }
-
-  handleEvent(event: CalendarEvent): void {
-    this.modalData = { event };
+  openModalForEvent(event: CalendarEvent): void {
+    this.modalData = { 
+      start: event.start.toLocaleString(),
+      end: event.end?.toLocaleString()
+    };
     this.modal.open(this.modalContent, { size: 'lg' });
   }
 
-  addEvent(): void {
-    this.events = [
-      ...this.events,
-      {
-        title: 'New event',
-        start: startOfDay(new Date()),
-        end: endOfDay(new Date()),
-        color: colors['red'],
-        draggable: true,
-        resizable: {
-          beforeStart: true,
-          afterEnd: true,
-        },
-      },
-    ];
-  }
-
   addEventFromReservaDate(date: Date): void {
-    console.log('Entra a añadir evento');
+    const endDate = new Date(date);
+    endDate.setHours(date.getHours() + 1);
+    console.log(endDate);
     this.events = [
       ...this.events,
       {
         title: 'New event',
         start: date,
-        end: new Date(date.getHours() + 1),
+        end: endDate,
         color: colors['red'],
         draggable: true,
         resizable: {
@@ -212,4 +188,12 @@ export class ReservasComponent implements OnInit {
   private ceilToNearest(amount: number, precision: number) {
     return Math.ceil(amount / precision) * precision;
   }
+
+  private parseToLocalDate(dateWithZone: Date): Date {
+    const dateString = dateWithZone.toLocaleString();
+    const localDateTime = new Date(dateString);
+    console.log(localDateTime);
+    return localDateTime;
+  }
+
 }

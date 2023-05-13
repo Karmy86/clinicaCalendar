@@ -65,8 +65,7 @@
       [events]="events"
       [refresh]="refresh"
       [activeDayIsOpen]="activeDayIsOpen"
-      (dayClicked)="dayClicked($event.day)"
-      (eventClicked)="handleEvent($event.event)"
+      (eventClicked)="openModalForEvent($event.event)"
     >
     </mwl-calendar-month-view>
     <mwl-calendar-week-view
@@ -74,8 +73,10 @@
       [viewDate]="viewDate"
       [events]="events"
       [refresh]="refresh"
-      (eventClicked)="handleEvent($event.event)"
+      (eventClicked)="openModalForEvent($event.event)"
       [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+      [dayStartHour]="8"
+      [dayEndHour]="21"
     >
     </mwl-calendar-week-view>
     <mwl-calendar-day-view
@@ -83,7 +84,7 @@
       [viewDate]="viewDate"
       [events]="events"
       [refresh]="refresh"
-      (eventClicked)="handleEvent($event.event)"
+      (eventClicked)="openModalForEvent($event.event)"
     >
     </mwl-calendar-day-view>
   </div>
@@ -118,9 +119,10 @@
       </button>
     </div>
     <div class="modal-body">
+      <h6>¿Seguro que desea reservar cita a la siguiente hora?</h6>
       <div>
-        Event:
-        <pre>{{ modalData?.event | json }}</pre>
+        <pre>Desde: {{ modalData?.start }}</pre>
+        <pre>Hasta: {{ modalData?.end }}</pre>
       </div>
     </div>
     <div class="modal-footer">
