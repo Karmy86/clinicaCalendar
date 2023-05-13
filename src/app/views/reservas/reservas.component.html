@@ -77,6 +77,7 @@
       [hourSegmentTemplate]="weekViewHourSegmentTemplate"
       [dayStartHour]="8"
       [dayEndHour]="21"
+      [weekStartsOn]="weekStartsOn"
     >
     </mwl-calendar-week-view>
     <mwl-calendar-day-view
@@ -111,10 +112,10 @@
     </div>
   </ng-template>
   
-  <ng-template #modalContent let-close="close">
+  <ng-template #modalContent>
     <div class="modal-header">
       <h5 class="modal-title">Reservar Cita</h5>
-      <button type="button" class="close" (click)="close()">
+      <button type="button" class="close" (click)="closeAndDeleteLastEvent()">
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
@@ -126,12 +127,14 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="close()">
-        OK
+      <button type="button" class="btn btn-outline-secondary" (click)="closeAndDeleteLastEvent()">
+        NO
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="nuevaReserva(modalData)">
+        SÍ
       </button>
     </div>
   </ng-template>
 
-  <!-- Everything you see below is just for the demo, you don't need to include it in your app -->
   
   

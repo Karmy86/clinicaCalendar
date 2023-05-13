@@ -8,10 +8,20 @@ import { LoginDataModel } from '../interfaces/login-data.model';
 })
 export class LoginService {
 
+  private _currentPatientId: number = 0;
+
   constructor(private httpClient: HttpClient) { }
 
   public login(loginData: LoginDataModel) {
-    return this.httpClient.post<Response>('http://localhost:8000/pacientes/login',loginData);
+    return this.httpClient.post<number>('http://localhost:8000/pacientes/login',loginData);
+  }
+
+  public setCurrentPatientId(value: number) {
+    this._currentPatientId = value;
+  }
+
+  public getCurrentPatientId(): number {
+    return this._currentPatientId;
   }
 
 }

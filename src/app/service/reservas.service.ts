@@ -21,4 +21,8 @@ export class ReservasService {
     return this.httpClient.get<Reservas[]>(this.rutaApi + '/listar', options);
   }
 
+  public newReserva(data: Reservas): Observable<string> {
+    return this.httpClient.post<string>(this.rutaApi + '/nueva', data);
+  }
+
 }

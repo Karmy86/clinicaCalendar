@@ -1,16 +1,12 @@
+import { Reservas } from './../../interfaces/reservas.model';
 import {
   Component,
   ChangeDetectionStrategy,
   ViewChild,
   TemplateRef,
   OnInit,
-  ChangeDetectorRef, 
 } from '@angular/core';
 import {
-  startOfDay,
-  endOfDay,
-  isSameDay,
-  isSameMonth,
   startOfWeek,
   endOfWeek,
   addMinutes,
@@ -24,6 +20,7 @@ import {
 } from 'angular-calendar';
 import { EventColor, WeekViewHourSegment } from 'calendar-utils';
 import { ReservasService } from 'src/app/service/reservas.service';
+import { LoginService } from 'src/app/service/login.service';
 
 const colors: Record<string, EventColor> = {
   red: {
@@ -62,13 +59,13 @@ export class ReservasComponent implements OnInit {
 
   activeDayIsOpen: boolean = true;
 
-  weekStartsOn: 0 = 0;
+  weekStartsOn: 1 = 1;
 
   refresh = new Subject<void>();
 
   locale = "en";
 
-  constructor(private modal: NgbModal, private reservasService: ReservasService, private cdr: ChangeDetectorRef) {}
+  constructor(private modal: NgbModal, private reservasService: ReservasService, private loginService: LoginService) {}
 
   ngOnInit(): void {
     this.loadAllReservedDays();
@@ -76,9 +73,15 @@ export class ReservasComponent implements OnInit {
 
   loadAllReservedDays() {
     const from = startOfWeek(new Date());
-    this.reservasService.findAllByWeek(startOfWeek(new Date()), endOfWeek(new Date())).subscribe({
+    this.reservasService.findAllByWeek(startOfWeek(this.viewDate), endOfWeek(this.viewDate)).subscribe({
       next: (value) => {
-        value.forEach((reserva) => this.addEventFromReservaDate(new Date(reserva.dia_hora)));
+        value.forEach((reserva) => {
+          if (reserva.id_paciente === this.loginService.getCurrentPatientId()) {
+            this.addEventFromReservaDate(new Date(reserva.dia_hora), true);
+          } else {
+            this.addEventFromReservaDate(new Date(reserva.dia_hora), false);
+          }
+        });
         this.refresh.next();
       },
       error: (error) => console.error('Error al obtener los días disponibles: ', error)
@@ -89,8 +92,8 @@ export class ReservasComponent implements OnInit {
     mouseDownEvent: MouseEvent, segmentElement: HTMLElement) {
     const dragToSelectEvent: CalendarEvent = {
       id: this.events.length,
-      title: 'New event',
-      // start: this.parseToLocalDate(segment.date),
+      title: 'Tu cita',
+      color: colors['yellow'],
       start: segment.date,
       meta: {
         tmpEvent: true,
@@ -108,7 +111,6 @@ export class ReservasComponent implements OnInit {
         finalize(() => {
           delete dragToSelectEvent.meta.tmpEvent;
           this.dragToCreateActive = false;
-          // this.refresh();
           this.openModalForEvent(dragToSelectEvent);
           this.refresh.next();
         }),
@@ -128,10 +130,8 @@ export class ReservasComponent implements OnInit {
 
         const newEnd = addDays(addMinutes(segment.date, minutesDiff), daysDiff);
         if (newEnd > segment.date && newEnd < endOfView) {
-          // dragToSelectEvent.end = this.parseToLocalDate(newEnd);
           dragToSelectEvent.end = newEnd;
         }
-        // this.refresh();
         this.refresh.next();
       });
   }
@@ -139,22 +139,26 @@ export class ReservasComponent implements OnInit {
   openModalForEvent(event: CalendarEvent): void {
     this.modalData = { 
       start: event.start.toLocaleString(),
-      end: event.end?.toLocaleString()
+      startDate: event.start,
+      end: event.end?.toLocaleString(),
+      endDate: event.end
     };
     this.modal.open(this.modalContent, { size: 'lg' });
   }
 
-  addEventFromReservaDate(date: Date): void {
+  addEventFromReservaDate(date: Date, isCurrentPatientReserva: boolean): void {
+    const title = isCurrentPatientReserva ? 'Tu cita' : 'Reservado';
+    const color = isCurrentPatientReserva ? colors['yellow'] : colors['red']
     const endDate = new Date(date);
     endDate.setHours(date.getHours() + 1);
     console.log(endDate);
     this.events = [
       ...this.events,
       {
-        title: 'New event',
+        title: title,
         start: date,
         end: endDate,
-        color: colors['red'],
+        color: color,
         draggable: true,
         resizable: {
           beforeStart: true,
@@ -174,12 +178,26 @@ export class ReservasComponent implements OnInit {
 
   closeOpenMonthViewDay() {
     this.activeDayIsOpen = false;
+    this.loadAllReservedDays();
   }
 
-  // private refresh() {
-  //   this.events = [...this.events];
-  //   this.cdr.detectChanges();
-  // }
+  nuevaReserva(modalData: any) {
+    const date = modalData.startDate as Date;
+    const nuevaReserva: Reservas = {
+      id_paciente: this.loginService.getCurrentPatientId(),
+      dia_hora: modalData.start
+    };
+    this.reservasService.newReserva(nuevaReserva).subscribe({
+      next: () => this.modal.dismissAll(),
+      error: (error) => alert("Error al crear reserva. Primero debes acceder a la aplicación")
+    });
+  }
+
+  closeAndDeleteLastEvent() {
+    this.events.pop();
+    this.modal.dismissAll();
+    this.refresh.next();
+  }
 
   private floorToNearest(amount: number, precision: number) {
     return Math.floor(amount / precision) * precision;
@@ -187,13 +205,6 @@ export class ReservasComponent implements OnInit {
   
   private ceilToNearest(amount: number, precision: number) {
     return Math.ceil(amount / precision) * precision;
-  }
-
-  private parseToLocalDate(dateWithZone: Date): Date {
-    const dateString = dateWithZone.toLocaleString();
-    const localDateTime = new Date(dateString);
-    console.log(localDateTime);
-    return localDateTime;
   }
 
 }
