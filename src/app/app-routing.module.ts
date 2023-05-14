@@ -15,7 +15,7 @@ import { ReservasComponent } from './views/reservas/reservas.component';
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent, pathMatch: 'full' },
-  { path: 'home/fisio', component: FisioComponent },
+  { path: 'fisio', component: FisioComponent },
   { path: 'sueloPelvico', component: SueloPelvicoComponent },
   { path: 'podologia', component: PodologiaComponent },
   { path: 'enfermeria', component: EnfermeriaComponent },
